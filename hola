@@ -1,0 +1,129 @@
+#!/bin/sh
+
+# Version number
+VERSION="1.0.0"
+
+# Default install location
+INSTALL_PATH="/usr/local/bin/hola"
+
+# Color support (basic)
+if [ -t 1 ]; then
+    RED='\033[0;31m'
+    GREEN='\033[0;32m'
+    YELLOW='\033[1;33m'
+    NC='\033[0m' # No Color
+else
+    RED='' GREEN='' YELLOW='' NC=''
+fi
+
+# Check if we're installed globally
+is_installed() {
+    [ -f "$INSTALL_PATH" ] && [ -x "$INSTALL_PATH" ]
+}
+
+# Installation suggestion + interactive/auto logic
+show_install_suggestion() {
+    if is_installed; then
+        return
+    fi
+
+    echo ""
+    echo "${YELLOW}⚠️  Note: This script is not installed in $INSTALL_PATH${NC}"
+    echo "     For better usability, you can install it globally:"
+    echo ""
+    echo "     curl -fsSL https://raw.githubusercontent.com/Wilgat/hola/refs/heads/main/hola | sh"
+    echo ""
+
+    # Detect if we can interact with user
+    if [ -t 0 ] && [ -t 1 ]; then
+        # Interactive terminal available → ask
+        printf "     Would you like to install it now? (y/N): "
+        read -r answer </dev/tty 2>/dev/null || read -r answer
+        case "$answer" in
+            [Yy]*)
+                echo "Installing (interactive confirmation)..."
+                ;;
+            *)
+                echo "Continuing without installation..."
+                return
+                ;;
+        esac
+    else
+        # No tty → automatic installation (piped curl | sh case)
+        echo "Non-interactive mode detected → performing automatic installation..."
+        echo ""
+    fi
+
+    # Perform the installation (common for both cases)
+    TMP_SCRIPT="/tmp/hola_install_$$"
+    if ! curl -fsSL "https://raw.githubusercontent.com/Wilgat/hola/refs/heads/main/hola" -o "$TMP_SCRIPT"; then
+        echo "${RED}Failed to download latest version${NC}" >&2
+        rm -f "$TMP_SCRIPT" 2>/dev/null
+        return 1
+    fi
+
+    if ! chmod 755 "$TMP_SCRIPT"; then
+        echo "${RED}Failed to make script executable${NC}" >&2
+        rm -f "$TMP_SCRIPT"
+        return 1
+    fi
+
+    if cp "$TMP_SCRIPT" "$INSTALL_PATH" 2>/dev/null; then
+        echo "${GREEN}Installation successful!${NC}"
+        echo "You can now use 'hola' from anywhere."
+        rm -f "$TMP_SCRIPT"
+        exit 0
+    else
+        echo "${RED}Failed to copy to $INSTALL_PATH${NC}" >&2
+        echo "You may need to run with sudo:"
+        echo "  sudo curl -fsSL https://raw.githubusercontent.com/Wilgat/hola/refs/heads/main/hola | sudo sh"
+        rm -f "$TMP_SCRIPT"
+        return 1
+    fi
+}
+
+# Show help
+show_help() {
+    cat << 'EOF'
+hola - Simple script to display "¡Hola!" (v1.0.0)
+
+Usage:
+  hola          Display "¡Hola!"
+  hola version  Show version
+  hola help     This help
+
+Examples:
+  hola
+EOF
+}
+
+# ──────────────────────────────────────────────────────────────────────────────
+
+COMMAND="display"
+
+# Parse arguments
+while [ $# -gt 0 ]; do
+    case "$1" in
+        version|help) COMMAND="$1"; shift ;;
+        *) echo "${RED}Unknown argument: $1${NC}" >&2; echo "Use: hola help" >&2; exit 1 ;;
+    esac
+done
+
+# Show suggestion (interactive or auto-install)
+show_install_suggestion
+
+# Proceed with command
+case "$COMMAND" in
+    display)
+        echo "${GREEN}¡Hola!${NC}"
+        ;;
+
+    version)
+        echo "hola version $VERSION"
+        ;;
+
+    help)
+        show_help
+        ;;
+esac
+
