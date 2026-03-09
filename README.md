@@ -1,6 +1,3 @@
-Here's a clean and professional `README.md` for your `hola` project, following common open-source conventions and clearly explaining the curl-based installation method (just like the `timer` project you studied).
-
-```markdown
 # hola
 
 <img src="https://img.shields.io/badge/Version-1.0.0-blue?style=flat-square" alt="Version">  
@@ -126,16 +123,3 @@ The most useful contributions would be:
 
 Made with ♥ and one line of joy  
 2025–2026
-```
-
-This README should work well on GitHub, GitLab, SourceHut, etc.
-
-Let me know if you'd like to add:
-
-- a logo / badge section
-- screenshot of the output
-- more joke commands
-- build status badges
-- installation via Homebrew / npm / etc.
-
-Happy hola-ing! 😄
